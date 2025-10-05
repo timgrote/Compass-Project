@@ -24,7 +24,8 @@ services:
     # Volumes - persistent data
     volumes:
       - vault-data:/config  # Obsidian config and vault data
-      - ./config/obsidian/vault-template:/vault-template:ro  # Initial vault template (read-only)
+      - ./config/obsidian/compass-vault:/vault-template:ro  # Initial vault template (read-only)
+      - ./scripts/init-vault.sh:/etc/cont-init.d/99-init-vault:ro  # Vault initialization script
 
     # Ports
     ports:
