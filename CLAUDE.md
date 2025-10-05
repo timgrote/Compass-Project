@@ -289,3 +289,30 @@ volumes:
 - **Familiar with:** .NET, n8n basics, Obsidian power user
 - **Learning:** Docker, MCP, AI integration patterns
 - **Mission:** Build systems that improve quality of life for all life on Earth
+
+## Claude Code Configuration
+
+### Permissions
+This project uses `.claude/settings.local.json` for user-specific Claude Code permissions. Recommended permissions for this project:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(docker:*)",
+      "Bash(docker-compose:*)"
+    ]
+  }
+}
+```
+
+### Working with Future Claude Instances
+- **This file (CLAUDE.md)** is your primary guidance document
+- **README.md** contains comprehensive project documentation for users and developers
+- Always check current branch and phase before starting work
+- Use TodoWrite tool for multi-step tasks to track progress
+- Test Docker changes locally before committing
