@@ -1,0 +1,61 @@
+version: '3.8'
+
+# Compass - AI-Assisted Personal Navigation System
+# Phase 1: Obsidian REST API Proof of Concept
+#
+# This docker-compose file sets up the basic Obsidian environment
+# with REST API access for programmatic vault interaction.
+
+services:
+  obsidian:
+    image: lscr.io/linuxserver/obsidian:latest
+    container_name: compass-obsidian
+
+    # Security context
+    security_opt:
+      - seccomp:unconfined  # Required for GUI in container
+
+    # Environment variables
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+
+    # Volumes - persistent data
+    volumes:
+      - vault-data:/config  # Obsidian config and vault data
+      - ./config/obsidian/vault-template:/vault-template:ro  # Initial vault template (read-only)
+
+    # Ports
+    ports:
+      - "${OBSIDIAN_PORT:-3000}:3000"      # Web UI access
+      - "${OBSIDIAN_PORT_HTTPS:-3001}:3001"  # HTTPS Web UI (optional)
+      - "${API_PORT:-27124}:27124"         # REST API port (configured in plugin)
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Network
+    networks:
+      - compass-net
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# Named volumes for data persistence
+volumes:
+  vault-data:
+    driver: local
+    # IMPORTANT: This volume contains user's vault data
+    # Must be backed up regularly (see scripts/backup.sh)
+
+# Custom network for inter-container communication
+networks:
+  compass-net:
+    driver: bridge
+    # Phase 2+: n8n, postgres, mcp-server will join this network
