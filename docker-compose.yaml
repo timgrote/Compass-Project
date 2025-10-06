@@ -31,7 +31,8 @@ services:
     ports:
       - "${OBSIDIAN_PORT:-3000}:3000"      # Web UI access
       - "${OBSIDIAN_PORT_HTTPS:-3001}:3001"  # HTTPS Web UI (optional)
-      - "${API_PORT:-27124}:27124"         # REST API port (configured in plugin)
+      - "${API_PORT:-27124}:27124"         # REST API HTTPS port
+      - "${API_PORT_HTTP:-27123}:27123"    # REST API HTTP port (insecure)
 
     # Restart policy
     restart: unless-stopped
