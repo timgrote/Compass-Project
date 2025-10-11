@@ -40,14 +40,16 @@ docker run --rm \
 
 ## Development Roadmap
 
-**Phase 1:** ✅ Obsidian + REST API (In Development)
+**Phase 1:** ✅ Obsidian + REST API (Complete)
 - Docker-based Obsidian deployment
 - Web-accessible vault
 - REST API for programmatic access
 
-**Phase 2:** ⏳ n8n Workflow Automation (Planned)
-- Automated daily prompts
-- Workflow triggers
+**Phase 2:** ✅ n8n Workflow Automation (Complete)
+- n8n container integrated with PostgreSQL
+- Automated workflows for vault interaction
+- Webhook support for dynamic operations
+- Credential management for API access
 
 **Phase 3:** ⏳ Easy Installation (Planned)
 - One-command install script
