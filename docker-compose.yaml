@@ -1,10 +1,12 @@
 version: '3.8'
 
 # Compass - AI-Assisted Personal Navigation System
-# Phase 1: Obsidian REST API Proof of Concept
+# Phase 2: n8n Workflow Automation
 #
-# This docker-compose file sets up the basic Obsidian environment
-# with REST API access for programmatic vault interaction.
+# This docker-compose file sets up:
+# - Obsidian with REST API for vault access
+# - n8n for workflow automation
+# - PostgreSQL database for n8n
 
 services:
   obsidian:
@@ -49,15 +51,101 @@ services:
       retries: 3
       start_period: 40s
 
+  # PostgreSQL database for n8n
+  postgres:
+    image: postgres:16-alpine
+    container_name: compass-postgres
+
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-n8n}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-n8n_password}
+      - POSTGRES_DB=${POSTGRES_DB:-n8n}
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+    networks:
+      - compass-net
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-n8n}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # n8n workflow automation
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: compass-n8n
+
+    environment:
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=${N8N_PORT:-5678}
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
+
+      # Database configuration
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-n8n}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-n8n}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-n8n_password}
+
+      # Timezone
+      - TZ=${TZ:-America/New_York}
+
+      # Execution mode
+      - EXECUTIONS_MODE=regular
+
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+
+    volumes:
+      - n8n-data:/home/node/.n8n
+      - ./config/n8n/workflows:/workflows:ro  # Pre-built workflow templates (Phase 3+)
+
+    networks:
+      - compass-net
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      obsidian:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
 # Named volumes for data persistence
 volumes:
   vault-data:
     driver: local
-    # IMPORTANT: This volume contains user's vault data
+    # IMPORTANT: This volume contains user's vault data (journals, notes)
     # Must be backed up regularly (see scripts/backup.sh)
+
+  n8n-data:
+    driver: local
+    # Contains n8n workflows, credentials, and execution history
+    # Persists across container restarts
+
+  postgres-data:
+    driver: local
+    # PostgreSQL database for n8n
+    # Contains workflow state and execution logs
 
 # Custom network for inter-container communication
 networks:
   compass-net:
     driver: bridge
-    # Phase 2+: n8n, postgres, mcp-server will join this network
+    # All services communicate on this network
+    # Obsidian API accessible at: http://compass-obsidian:27123
+    # PostgreSQL accessible at: postgres:5432
