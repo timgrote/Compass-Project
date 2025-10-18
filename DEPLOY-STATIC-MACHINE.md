@@ -15,6 +15,38 @@ Your static machine needs:
 
 ### 1. Install Dependencies (if needed)
 
+Choose instructions based on your OS:
+
+---
+
+#### **Windows**
+
+**1. Install Docker Desktop**:
+- Download from: https://www.docker.com/products/docker-desktop
+- Install and restart when prompted
+- Docker Desktop includes Docker Compose automatically
+- **Important**: Enable "Start Docker Desktop when you log in" in settings
+
+**2. Install Git** (if not already installed):
+- Download from: https://git-scm.com/download/win
+- Install with default options
+- Verify: Open PowerShell and run `git --version`
+
+**3. Install Tailscale**:
+- Download from: https://tailscale.com/download/windows
+- Install and sign in
+- Tailscale will run in system tray
+- Get your IP: Click Tailscale icon or run `tailscale ip -4` in PowerShell
+
+**4. Choose your terminal**:
+- **Option A**: PowerShell (built-in, recommended)
+- **Option B**: Git Bash (included with Git installation)
+- **Option C**: WSL/Ubuntu (if you want Linux environment)
+
+---
+
+#### **Linux (Ubuntu/Debian)**
+
 **Docker & Docker Compose**:
 ```bash
 # Ubuntu/Debian
@@ -42,8 +74,44 @@ sudo tailscale up
 tailscale ip -4
 ```
 
+---
+
+#### **macOS**
+
+**1. Install Docker Desktop**:
+- Download from: https://www.docker.com/products/docker-desktop
+- Drag to Applications folder and launch
+- Enable "Start Docker Desktop when you log in"
+
+**2. Install Git** (usually pre-installed):
+```bash
+git --version
+# If not installed, macOS will prompt to install Xcode tools
+```
+
+**3. Install Tailscale**:
+- Download from: https://tailscale.com/download/mac
+- Install and sign in
+- Get IP: `tailscale ip -4` in Terminal
+
+---
+
 ### 2. Clone the Repository
 
+**Windows (PowerShell)**:
+```powershell
+# Navigate to where you want the project (e.g., Documents)
+cd $HOME\Documents
+
+# Clone the repo
+git clone https://github.com/timgrote/Compass-Project.git
+cd Compass-Project
+
+# Checkout the conversation vault branch
+git checkout feature/conversation-vault
+```
+
+**Windows (Git Bash) or Linux/macOS**:
 ```bash
 # Clone the Compass-Project repo
 cd ~
@@ -58,6 +126,16 @@ git checkout feature/conversation-vault
 
 Create `.env` file if you want to customize ports or settings:
 
+**Windows (PowerShell)**:
+```powershell
+# Copy template
+Copy-Item .env.template .env
+
+# Edit if needed (optional)
+notepad .env
+```
+
+**Linux/macOS/Git Bash**:
 ```bash
 # Copy template
 cp .env.template .env
@@ -73,6 +151,7 @@ Default ports:
 
 ### 4. Start the Vault
 
+**All platforms** (PowerShell, Git Bash, Linux, macOS):
 ```bash
 # Start all services in detached mode
 docker compose up -d
@@ -85,6 +164,8 @@ docker compose ps
 # - compass-n8n: healthy
 # - compass-postgres: healthy
 ```
+
+**Note for Windows**: Docker Desktop must be running before executing these commands.
 
 ### 5. Verify Deployment
 
@@ -131,8 +212,12 @@ tailscale ip -4
 
 ### 7. Enable Auto-Start on Boot (Recommended)
 
-Make sure Docker starts on boot and restarts services automatically:
+**Windows**:
+- Docker Desktop: Settings → General → "Start Docker Desktop when you log in" (enable)
+- The `docker-compose.yaml` has `restart: unless-stopped` so containers auto-restart
+- Your vault will start automatically when Windows starts
 
+**Linux**:
 ```bash
 # Enable Docker to start on boot
 sudo systemctl enable docker
@@ -140,6 +225,10 @@ sudo systemctl enable docker
 # Set restart policy (already configured in docker-compose.yaml)
 # Containers will auto-restart unless manually stopped
 ```
+
+**macOS**:
+- Docker Desktop: Preferences → General → "Start Docker Desktop when you log in" (enable)
+- Containers will auto-restart with the `restart: unless-stopped` policy
 
 The `docker-compose.yaml` already has `restart: unless-stopped` for all services.
 
@@ -157,7 +246,13 @@ The `docker-compose.yaml` already has `restart: unless-stopped` for all services
 
 **Stop the vault**:
 ```bash
+# Windows (PowerShell): Navigate to project first
+cd $HOME\Documents\Compass-Project
+
+# Linux/macOS/Git Bash
 cd ~/Compass-Project
+
+# Then run (all platforms)
 docker compose down
 ```
 
@@ -168,6 +263,13 @@ docker compose restart
 
 **Update to latest version**:
 ```bash
+# Windows (PowerShell)
+cd $HOME\Documents\Compass-Project
+git pull origin feature/conversation-vault
+docker compose down
+docker compose up -d
+
+# Linux/macOS/Git Bash
 cd ~/Compass-Project
 git pull origin feature/conversation-vault
 docker compose down
@@ -180,6 +282,22 @@ docker compose logs -f
 ```
 
 **Backup vault data**:
+
+**Windows (PowerShell)**:
+```powershell
+# Create backup directory
+New-Item -ItemType Directory -Force -Path "$HOME\backups"
+
+# Backup vault data
+docker run --rm `
+  -v compass-project_vault-data:/data `
+  -v ${HOME}/backups:/backup `
+  alpine tar czf /backup/vault-backup-$(Get-Date -Format 'yyyyMMdd').tar.gz -C /data .
+
+# Backup will be in C:\Users\YourName\backups\vault-backup-YYYYMMDD.tar.gz
+```
+
+**Linux/macOS/Git Bash**:
 ```bash
 # Create backup directory
 mkdir -p ~/backups
@@ -194,6 +312,23 @@ docker run --rm \
 ```
 
 **Restore from backup**:
+
+**Windows (PowerShell)**:
+```powershell
+# Stop services first
+docker compose down
+
+# Restore (replace YYYYMMDD with your backup date)
+docker run --rm `
+  -v compass-project_vault-data:/data `
+  -v ${HOME}/backups:/backup `
+  alpine tar xzf /backup/vault-backup-YYYYMMDD.tar.gz -C /data
+
+# Start services
+docker compose up -d
+```
+
+**Linux/macOS/Git Bash**:
 ```bash
 # Stop services first
 docker compose down
@@ -312,7 +447,42 @@ See `DEPLOYMENT-TEST.md` section "Adding Authentication" for details.
 
 ## Automatic Backups (Optional)
 
-Set up daily backups via cron:
+### Windows (Task Scheduler)
+
+**1. Create backup script**:
+
+Save this as `backup-vault.ps1` in your Documents folder:
+```powershell
+# backup-vault.ps1
+$BACKUP_DIR = "$HOME\backups"
+$DATE = Get-Date -Format 'yyyyMMdd'
+
+# Create backup directory if it doesn't exist
+New-Item -ItemType Directory -Force -Path $BACKUP_DIR | Out-Null
+
+# Backup vault
+docker run --rm `
+  -v compass-project_vault-data:/data `
+  -v ${BACKUP_DIR}:/backup `
+  alpine tar czf /backup/vault-backup-$DATE.tar.gz -C /data .
+
+# Keep only last 7 days
+Get-ChildItem $BACKUP_DIR -Filter "vault-backup-*.tar.gz" |
+  Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-7) } |
+  Remove-Item
+```
+
+**2. Set up Task Scheduler**:
+- Open Task Scheduler (search in Start menu)
+- Action → Create Basic Task
+- Name: "Backup Conversation Vault"
+- Trigger: Daily at 2:00 AM
+- Action: Start a program
+  - Program: `powershell.exe`
+  - Arguments: `-ExecutionPolicy Bypass -File C:\Users\YourName\Documents\backup-vault.ps1`
+- Finish
+
+### Linux/macOS (cron)
 
 ```bash
 # Create backup script
@@ -339,17 +509,28 @@ chmod +x ~/backup-vault.sh
 ## Static Machine Recommendations
 
 **Best practices**:
-- Use a machine that stays on 24/7 (server, NUC, always-on desktop)
+- Use a machine that stays on 24/7 (server, NUC, always-on desktop/laptop)
 - Ensure reliable internet connection
 - Set up automatic OS updates (but test before applying)
 - Monitor disk space (vault will grow over time)
 - Enable automatic backups (see above)
-- Use static IP or Tailscale for consistent access
+- Use Tailscale for consistent remote access
 
 **Hardware recommendations**:
 - **Minimum**: 2GB RAM, 20GB disk, any modern CPU
 - **Recommended**: 4GB RAM, 50GB SSD, dual-core CPU
-- **Ideal**: Raspberry Pi 4 (4GB), Intel NUC, or any server
+- **Ideal options**:
+  - Windows desktop/laptop (always-on)
+  - Raspberry Pi 4 (4GB RAM)
+  - Intel NUC or mini PC
+  - Linux server (VPS or local)
+  - Mac Mini (always-on)
+
+**Windows-specific tips**:
+- Disable sleep mode: Settings → System → Power & sleep → Never
+- Set up automatic Windows updates during off-hours
+- Ensure Docker Desktop starts on login
+- Consider a dedicated mini PC rather than your daily driver
 
 ## Next Steps
 
