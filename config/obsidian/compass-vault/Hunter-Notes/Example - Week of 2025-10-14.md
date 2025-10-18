@@ -30,7 +30,7 @@ tags: [update, hunter]
 
 - @Tim: How's the crypto sign-in coming? Want to pair on it this weekend?
 - @Tim: Thoughts on making this vault template a product? Or keep it personal/small?
-- What's your take on the Costa Rica ceremony? You seemed interested but hesitant.
+
 
 ## Links Worth Sharing
 
@@ -39,7 +39,6 @@ tags: [update, hunter]
 
 ## Personal Updates
 
-- Ollie and I are doing better after some honest conversations
 - Training for a half marathon in January (first time)
 - Started meditating more consistently (inspired by your practice)
 - Considering splitting time between US and Argentina for part of next year
