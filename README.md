@@ -1,8 +1,8 @@
 # Compass 🧭
 
-**AI-Assisted Personal Navigation System**
+**Collaborative Conversation Vault**
 
-A privacy-first journaling and reflection system to help you find direction in life.
+A privacy-first shared Obsidian vault for async conversation and collaborative idea development.
 
 ## Quick Start
 
@@ -24,16 +24,18 @@ docker compose up -d
 ### Access Compass
 
 **Obsidian Vault:** http://localhost:3000
-Your personal vault for journaling and notes.
+Shared vault for conversations, ideas, and collaboration.
 
 **n8n Workflow Automation:** http://localhost:5678
 Create automated workflows to interact with your vault.
 
 ## What's Inside
 
-- 📓 Pre-configured Obsidian vault with journaling templates
-- 🤖 n8n workflow automation for scheduled journaling
-- 🎯 Telos framework for goal-setting and purpose
+- 💬 Pre-configured conversation vault with threaded discussions
+- 💡 Shared idea development space with collaboration patterns
+- 🔗 Link library with dual analysis sections
+- 📝 Personal spaces for each person (read-only for others)
+- 🤖 n8n workflow automation ready for Telegram/voice integration
 - 🔒 Runs completely locally - your data stays private
 
 ## Common Commands
