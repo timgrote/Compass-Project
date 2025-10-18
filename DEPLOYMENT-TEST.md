@@ -65,18 +65,136 @@ docker compose ps
 # Should see: obsidian, n8n, postgres all healthy
 ```
 
-### 5. Test from Another Device (Optional)
+### 5. Share with Remote Collaborator (Tailscale Deployment)
 
-If you want to test remote access:
+**Recommended Approach**: Use Tailscale for secure, private access
 
-**Option A: Local Network**
-- Get your machine's local IP: `ip addr show`
-- Access from another device: `http://YOUR_IP:3000`
+#### Step 1: Get Your Tailscale IP
 
-**Option B: VPN (Tailscale recommended)**
-- Install Tailscale on host machine
-- Share Tailscale IP with Hunter
-- Access via Tailscale IP: `http://TAILSCALE_IP:3000`
+**On Windows** (if running Docker Desktop):
+1. Open Tailscale app from system tray
+2. Click on Tailscale icon - your IP shows (format: `100.x.x.x`)
+3. **OR** open PowerShell: `tailscale ip -4`
+
+**On Linux/WSL with Tailscale installed**:
+```bash
+tailscale ip -4
+```
+
+Example IP: `100.64.1.100`
+
+#### Step 2: Choose Deployment Strategy
+
+**Option A: Private Tailnet Access (Most Secure - Recommended)**
+
+Hunter needs to join your Tailscale network:
+
+1. **Invite Hunter to your tailnet**:
+   - Go to https://login.tailscale.com/admin/machines
+   - Click "Share" or "Add device"
+   - Send Hunter the invite link
+
+2. **Hunter installs Tailscale**:
+   - Download from https://tailscale.com/download
+   - Sign in using your invite link
+   - Tailscale connects him to your network
+
+3. **Share the URL with Hunter**:
+   - Format: `http://YOUR_TAILSCALE_IP:3000`
+   - Example: `http://100.64.1.100:3000`
+   - He can only access it while connected to your tailnet
+
+**Pros**:
+- ✅ Encrypted peer-to-peer connection
+- ✅ No public exposure
+- ✅ Works from anywhere (Portugal, travel, etc.)
+- ✅ Free for personal use (up to 100 devices)
+- ✅ No port forwarding or firewall config needed
+
+**Cons**:
+- Hunter needs to install Tailscale
+- Both need to be connected to tailnet
+
+---
+
+**Option B: Tailscale Funnel (Public HTTPS URL)**
+
+Expose your vault publicly via Tailscale Funnel:
+
+1. **Enable Funnel** (Windows PowerShell or Linux):
+   ```powershell
+   # Windows PowerShell
+   tailscale funnel 3000
+
+   # Linux/WSL
+   sudo tailscale funnel 3000
+   ```
+
+2. **Get public URL**:
+   - Format: `https://your-machine-name.your-tailnet.ts.net`
+   - Example: `https://tim-windows.tailnet-123.ts.net`
+
+3. **Share URL with Hunter**:
+   - He can access from any browser
+   - No Tailscale installation needed
+   - Works from anywhere with internet
+
+**Pros**:
+- ✅ Hunter needs no setup - just click the link
+- ✅ HTTPS automatically configured
+- ✅ Works from anywhere
+
+**Cons**:
+- ⚠️ Publicly accessible (anyone with URL can access)
+- ⚠️ Should add authentication (see Option 3A/3B below)
+- ⚠️ Machine must stay running for access
+
+---
+
+**Option C: Local Network Only (Testing)**
+
+For same-network testing only:
+
+1. Get your Windows local IP:
+   ```powershell
+   ipconfig | findstr IPv4
+   ```
+
+2. Access from other device on same network:
+   - Format: `http://YOUR_LOCAL_IP:3000`
+   - Example: `http://192.168.1.100:3000`
+
+**Limitation**: Only works when both on same WiFi/network
+
+---
+
+#### Recommended Setup for Hunter in Portugal
+
+**Best approach**: **Option A (Private Tailnet)**
+
+1. Send Hunter Tailscale invite
+2. He installs Tailscale on his machine (Mac/Windows/Linux)
+3. Share your Tailscale IP: `http://100.x.x.x:3000`
+4. Both of you can access the vault from anywhere
+5. Connection is encrypted and private
+
+**When to use Funnel (Option B)**:
+- Quick demo without Hunter installing anything
+- You plan to add authentication (basic auth or crypto sign-in)
+- You want a persistent public URL
+
+#### Troubleshooting Tailscale
+
+**Can't find Tailscale IP?**
+- Check Tailscale is running (system tray icon)
+- Open Tailscale admin console: https://login.tailscale.com/admin/machines
+- Your machine's tailnet IP is listed there
+
+**Hunter can't connect?**
+- Verify he's signed into Tailscale and connected
+- Check both machines show "Connected" in Tailscale
+- Try pinging his Tailscale IP from yours: `ping 100.x.x.x`
+- Ensure Docker port 3000 is accessible (should be by default)
 
 ## Next Steps: Adding Authentication
 
